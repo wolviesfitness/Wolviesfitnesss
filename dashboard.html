@@ -432,11 +432,16 @@ nav,.sticky{position:-webkit-sticky;position:sticky}
 
 <script>
 // ── SUPABASE INIT ────────────────────────────────────────────
-const { createClient } = supabase;
-const sb = createClient(
-  'https://umaoojouoxwwrseiesrk.supabase.co',
-  'sb_publishable_sFN-9muj_8W0cfRDetHoPQ_mC6oIpSm'
-);
+let sb;
+try {
+  const { createClient } = supabase;
+  sb = createClient(
+    'https://umaoojouoxwwrseiesrk.supabase.co',
+    'sb_publishable_sFN-9muj_8W0cfRDetHoPQ_mC6oIpSm'
+  );
+} catch(e) {
+  console.warn('Supabase init failed:', e);
+}
 
 const GOAL_LABELS = {
   fat_loss: 'Fat Loss', muscle_gain: 'Muscle Gain',
@@ -460,6 +465,7 @@ function showMsg(id, type, text) {
 
 // ── REGISTER ────────────────────────────────────────────────
 async function doRegister() {
+  if(!sb){showMsg('registerMsg','error','Registration not configured yet. Please contact the site admin.');return;}
   const name  = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
   const email = document.getElementById('regEmail').value.trim();
@@ -500,6 +506,7 @@ async function doRegister() {
 
 // ── LOGIN ────────────────────────────────────────────────────
 async function doLogin() {
+  if(!sb){showMsg('loginMsg','error','Dashboard not configured yet. Please contact the site admin.');return;}
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
   if(!email||!pass) return showMsg('loginMsg','error','Please enter your email and password.');
@@ -590,11 +597,12 @@ async function saveProfile() {
 
 // ── AUTO LOGIN CHECK ─────────────────────────────────────────
 (async () => {
+  if(!sb) return;
   const { data: { session } } = await sb.auth.getSession();
   if(session?.user) loadDashboard(session.user);
 })();
 
-sb.auth.onAuthStateChange((event, session) => {
+if(sb) sb.auth.onAuthStateChange((event, session) => {
   if(event==='SIGNED_IN' && session) loadDashboard(session.user);
   if(event==='SIGNED_OUT') {
     document.getElementById('dashboardView').style.display='none';
